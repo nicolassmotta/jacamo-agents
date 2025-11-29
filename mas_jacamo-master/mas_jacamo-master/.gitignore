@@ -1,0 +1,19 @@
+# Ignorar arquivos temporários do Gradle e Java
+.gradle/
+build/
+bin/
+*.class
+
+# Ignorar configurações de IDEs (para não dar conflito se alguém usar Eclipse/IntelliJ)
+.vscode/
+.settings/
+.classpath
+.project
+*.iml
+.idea/
+
+# Ignorar logs e arquivos de sistema
+*.log
+*.csv
+.DS_Store
+Thumbs.db

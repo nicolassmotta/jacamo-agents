@@ -1,0 +1,12 @@
+mas mas_jacamo {
+
+    agent veiculo : veiculo.asl {
+        instances: 5
+    }
+
+    agent estacao_norte : estacao.asl
+    agent estacao_sul : estacao.asl
+
+    agent regulador : regulador.asl
+
+}
