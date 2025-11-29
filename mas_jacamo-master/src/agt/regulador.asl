@@ -1,3 +1,7 @@
+{ include("$jacamo/templates/common-cartago.asl") }
+{ include("$jacamo/templates/common-moise.asl") }
+{ include("$jacamo/templates/org-obedient.asl") }
+
 !inicio.
 
 +!inicio

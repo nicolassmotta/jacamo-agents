@@ -1,0 +1,33 @@
+mas mas_jacamo {
+
+    agent veiculo : veiculo.asl {
+        instances: 50
+        join: grupo_recarga
+        focus: estacao_norte.catraca_estacao_norte, 
+               estacao_sul.catraca_estacao_sul
+    }
+
+    agent estacao_norte : estacao.asl {
+        join: grupo_recarga
+    }
+
+    agent estacao_sul : estacao.asl {
+        join: grupo_recarga
+    }
+
+    agent regulador : regulador.asl {
+        join: grupo_recarga
+    }
+
+    organisation org_recarga : org.xml {
+        group grupo_recarga : mercado_energia {
+            players: veiculo       consumidor,
+                     estacao_norte fornecedor,
+                     estacao_sul   fornecedor,
+                     regulador     fiscal
+            debug
+        }
+    }
+
+    platform: mas_jacamo.LoggerArtifact()
+}

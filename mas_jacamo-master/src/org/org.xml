@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="https://moise-lang.github.io/xml/os.xsl" type="text/xsl" ?>
+
+<organisational-specification
+    id="mas_jacamo"
+    os-version="1.1"
+    xmlns='http://moise.sourceforge.net/os'
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xsi:schemaLocation='http://moise.sourceforge.net/os
+                        https://moise-lang.github.io/xml/os.xsd' >
+
+<structural-specification>
+    <role-definitions>
+        <role id="consumidor" /> <role id="fornecedor" /> <role id="fiscal" />     </role-definitions>
+
+    <group-specification id="mercado_energia">
+        <roles>
+            <role id="consumidor" min="1" max="200"/>
+            <role id="fornecedor" min="1" max="10"/>
+            <role id="fiscal"     min="1" max="1"/>
+        </roles>
+
+        <links>
+           <link from="fiscal" to="fornecedor" type="authority" scope="intra-group" bi-dir="false"/>
+           <link from="consumidor" to="fornecedor" type="communication" scope="intra-group" bi-dir="true"/>
+        </links>
+        
+        <formation-constraints>
+           <compatibility from="consumidor" to="consumidor" />
+        </formation-constraints>
+    </group-specification>
+</structural-specification>
+
+<functional-specification>
+    <scheme id="scheme_recarga">
+        <goal id="operar_mercado">
+            <plan operator="parallel">
+                <goal id="realizar_recargas"    ttf="1 hour" />
+                <goal id="regular_tarifas"      ttf="1 hour" />
+            </plan>
+        </goal>
+
+        <mission id="mission_consumo" min="1" max="200">
+            <goal id="realizar_recargas"/>
+        </mission>
+        <mission id="mission_regulacao" min="1" max="1">
+            <goal id="regular_tarifas"/>
+        </mission>
+    </scheme>
+</functional-specification>
+
+<normative-specification>
+    <norm id="n1" type="obligation" role="consumidor" mission="mission_consumo"/>
+    <norm id="n2" type="obligation" role="fiscal"     mission="mission_regulacao"/>
+</normative-specification>
+
+</organisational-specification>

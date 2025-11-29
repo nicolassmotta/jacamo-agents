@@ -1,0 +1,28 @@
+# --- JaCaMo & Gradle ---
+.gradle/
+build/
+bin/
+out/
+classes/
+*.class
+
+# --- Logs e Dados Gerados ---
+# Ignorar logs do JaCaMo e da Simulação (pois mudam a cada execução)
+log/
+mas-*.log
+simulacao_log_*.csv
+# Caso queria manter um exemplo de log, pode usar 'git add -f log_exemplo.csv'
+
+# --- Configurações de IDE (VS Code, Eclipse, IntelliJ) ---
+.vscode/
+.settings/
+.classpath
+.project
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# --- Sistema Operacional ---
+.DS_Store
+Thumbs.db
