@@ -6,8 +6,6 @@
 
 +!inicio
     <- .print("Iniciando Regulador...");
-       makeArtifact("logger", "mas_jacamo.LoggerArtifact", [], ArtId);
-       .print("Logger iniciado.");
        !ciclo.
 
 +!ciclo
