@@ -23,10 +23,9 @@ public class LoggerArtifact extends Artifact {
     }
 
     @OPERATION
-    void log(Object agente, Object evento, Object detalhe) { // <--- MUDOU PARA OBJECT
+    void log(Object agente, Object evento, Object detalhe) { 
         if (writer != null) {
             String time = LocalDateTime.now().toString();
-            // O .toString() converte Átomos, Números ou Textos para String Java
             String linha = time + ";" + agente.toString() + ";" + evento.toString() + ";" + detalhe.toString();
             
             writer.println(linha);

@@ -3,67 +3,104 @@
 { include("$jacamo/templates/org-obedient.asl") }
 
 bateria(100).
-limite(20).
+limite(60). 
 
-!viver.
+!start.
+
++!start 
+    <- .print("Aguardando estacoes...");
+       .wait(4000); 
+       !conectar_mundo;
+       !viver.
+
++!conectar_mundo
+    <- lookupArtifact("catraca_estacao_norte", ArtN);
+       focus(ArtN);
+       lookupArtifact("catraca_estacao_sul", ArtS);
+       focus(ArtS);
+       .print("Conectado!").
 
 +!viver : bateria(B) & B > 0 & not recarregando
-    <- .wait(500); 
-       NB = B - 5;
+    <- .wait(200);
+       NB = B - 1;  
        -+bateria(NB);
        !verificar_bateria;
        !viver.
 
 +!viver : recarregando
     <- .wait(100); !viver.
-    
+
 +!viver <- .print("Bateria acabou. Fim.").
 
 +!verificar_bateria : bateria(B) & limite(L) & B <= L & not negociando & not recarregando
-    <- .print("ALERTA: Bateria (",B,"%). Buscando estacao...");
+    <- .print("ALERTA: Bateria (",B,"%). Buscando...");
        +negociando;
        !buscar_estacao.
 +!verificar_bateria.
 
 +!buscar_estacao
     <- .df_search("servico_recarga", Lista);
-       .print("Encontrei estacoes: ", Lista);
-       .send(Lista, tell, cfp_recarga).
+       if (.empty(Lista)) {
+           .print("ERRO: Nenhuma estacao encontrada. Tentando em breve...");
+           .wait(2000); 
+           -negociando; 
+       } else {
+           .print("Encontrei: ", Lista);
+           .send(Lista, achieve, cfp_recarga);
+           !watchdog_negociacao;
+       } .
 
-+proposta(Preco)[source(Est)] : negociando
++!watchdog_negociacao
+    <- .wait(5000);
+       if (negociando & not recarregando) {
+           .print("TIMEOUT: Nenhuma oferta aceita. Resetando.");
+           -negociando;
+           -aceitou_proposta;
+           .wait(1000); 
+       }.
+
++!recusa_lotado[source(Est)] 
+    <- .print(Est, " esta LOTADA.").
+
++!proposta(Preco)[source(Est)] : negociando
     <- !avaliar(Est, Preco).
 
 +!avaliar(Est, P) : P > 2.0 & not aceitou_proposta 
-    <- .print("Muito caro! Tentando negociar com ", Est);
+    <- .print("Caro ($",P,") em ", Est, ". Negociando...");
        NovaOferta = P * 0.9; 
-       .send(Est, tell, contra_oferta(NovaOferta)).
+       .send(Est, achieve, contra_oferta(NovaOferta)).
 
 +!avaliar(Est, P) : not aceitou_proposta
     <- +aceitou_proposta;
-       .print("Aceitando proposta de ", Est, " ($", P, ")");
-       .send(Est, tell, aceite_final).
+       .print("Aceito ", Est, " ($", P, ")");
+       .send(Est, achieve, aceite_final).
 
-+!avaliar(Est, P) <- .print("Ja fechei com outro. Ignorando ", Est).
++!avaliar(Est, P).
 
-+confirma_recarga[source(Est)]
++!confirma_recarga[source(Est)]
     <- .print(">>> CARREGANDO em ", Est, " <<<");
        +recarregando;
-       .wait(2000); 
+       .wait(3000); 
        -+bateria(100);
        -recarregando;
        -negociando;
        -aceitou_proposta;
-       .send(Est, tell, liberar_vaga);
-       .print("Bateria cheia! Voltando.").
+       .send(Est, achieve, liberar_vaga);
+       .print("Bateria cheia!").
 
-+falha_recarga(M)[source(Est)]
++!falha_recarga(M)[source(Est)]
     <- .print("FALHA em ", Est, ": ", M);
        -aceitou_proposta;
-       .wait(1000);
-       if (negociando) { !buscar_estacao }.
+       .wait(1000).
 
-+rejeita_contra_oferta[source(Est)] : not aceitou_proposta 
-    <- .print(Est, " nao negociou. Aceitando preco cheio...");
++!rejeita_contra_oferta[source(Est)] : not aceitou_proposta 
+    <- .print(Est, " rejeitou oferta. Aceitando preco cheio.");
        +aceitou_proposta;
-       .send(Est, tell, aceite_final).
-+rejeita_contra_oferta[source(Est)].
+       .send(Est, achieve, aceite_final).
+
++!rejeita_contra_oferta[source(Est)].
+
++!aceite_proposta[source(Est)] : negociando
+    <- .print("Sucesso! A estacao ", Est, " aceitou minha oferta.");
+       +aceitou_proposta;
+       .send(Est, achieve, aceite_final).

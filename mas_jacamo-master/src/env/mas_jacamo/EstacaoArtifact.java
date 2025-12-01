@@ -41,4 +41,15 @@ public class EstacaoArtifact extends Artifact {
         this.precoBase = novoPreco;
         getObsProperty("preco_base").updateValue(novoPreco);
     }
+
+    @OPERATION
+    void calcularPreco(OpFeedbackParam<Double> precoCalculado) {
+        double pb = getObsProperty("preco_base").doubleValue();
+        int ocupadas = getObsProperty("vagas_ocupadas").intValue();
+        int totais = getObsProperty("vagas_totais").intValue();
+
+        double novoPreco = pb * (1.0 + ((double)ocupadas / totais));
+
+        precoCalculado.set(novoPreco);
+    }
 }
