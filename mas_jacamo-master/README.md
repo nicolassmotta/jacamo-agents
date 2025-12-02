@@ -1,76 +1,108 @@
 # Sistema de Gerenciamento de Recarga de Veículos Elétricos (SMA - Trabalho 2)
 
-Este projeto implementa um Sistema Multiagente (SMA) utilizando o framework **JaCaMo** (Jason + CArtAgO + Moise) para simular um mercado de energia e estacionamento autônomo. O sistema foca na negociação de preços, gestão de concorrência por vagas e regulação dinâmica de tarifas.
+Este projeto é uma extensão do Trabalho 1 da disciplina de Sistemas Multiagentes, implementado agora utilizando o framework **JaCaMo** (Jason + CArtAgO + Moise). O sistema simula um mercado de energia competitivo para veículos autônomos em uma cidade inteligente.
 
-## 📋 Descrição do Projeto
+## 📋 Funcionalidades Implementadas
 
-O sistema simula um cenário de cidade inteligente onde veículos autônomos buscam estações de recarga, negociam preços baseados na oferta/demanda e reagem a mudanças regulatórias.
+O sistema modela um cenário onde veículos elétricos autônomos buscam recarga, negociam preços dinamicamente e lidam com a escassez de vagas e regulação de tarifas.
 
-### Principais Funcionalidades (Requisitos Atendidos):
-* **Agentes Inteligentes:**
-    * `veiculo`: Monitora bateria, busca estações, negocia preços e decide onde recarregar.
-    * `estacao`: Define preços dinâmicos baseados na lotação e responde a requisições.
-    * `regulador`: Agente fiscal que altera a tarifa base (Alta/Baixa) ciclicamente para testar a resiliência do mercado.
-* **Organização (Moise):** Implementação da especificação organizacional `mercado_energia` com papéis de `consumidor`, `fornecedor` e `fiscal`.
-* **Ambiente (CArtAgO):**
-    * `EstacaoArtifact`: Gerencia a exclusão mútua das vagas e cálculo de preços.
-    * `LoggerArtifact`: Gera logs em CSV para análise de dados e gráficos.
-* **Escalabilidade:** Configurado e testado para cenários de alta densidade (50+ agentes), com tratamento de concorrência e falhas de alocação.
+### 1. Agentes Inteligentes (Jason)
+
+* **`veiculo`**: Agente comprador. Monitora sua bateria, busca estações, inicia leilões (Contract Net Protocol), negocia contra-propostas e decide onde recarregar com base no preço e disponibilidade. Implementa lógica de **retry** para conexão robusta.
+
+* **`estacao`**: Agente vendedor. Existem 4 instâncias com perfis diferentes (`norte`, `sul`, `leste`, `oeste`). Calculam preços baseados na lotação (Oferta/Demanda) e aceitam/rejeitam propostas.
+
+* **`regulador`**: Agente fiscal. Altera ciclicamente a tarifa base do mercado (Alta/Baixa) para simular choques externos e testar a adaptação dos agentes.
+
+### 2. Ambiente Compartilhado (CArtAgO)
+
+* **`EstacaoArtifact`**: Gerencia o estado físico de cada estação (vagas totais vs ocupadas) e garante exclusão mútua (thread-safe) para evitar que dois carros peguem a mesma vaga.
+
+* **`CSVLogger`**: Artefato customizado para persistência de dados. Grava eventos de negociação, vendas e falhas em arquivos `.csv` para análise posterior, suportando alta concorrência.
+
+### 3. Organização (Moise)
+
+* **Grupo `mercado_energia`**: Define os papéis (`consumidor`, `fornecedor`, `fiscal`) e as normas de interação dentro do workspace `mercado`.
 
 ## 🚀 Como Executar
 
 ### Pré-requisitos
+
 * Java JDK 17 ou superior.
-* Terminal (Bash, CMD ou PowerShell).
+
+* Terminal (Bash ou PowerShell).
 
 ### Passos
-1.  **Clone o repositório** ou extraia os arquivos.
-2.  **Abra o terminal** na pasta raiz do projeto.
-3.  **Execute o comando:**
 
-    No Linux/Mac/Git Bash:
+1. **Permissões (Linux/Mac):**
+   Garanta que o script de execução tenha permissão:
+
+   ```bash
+   chmod +x gradlew
+````
+
+2.  **Executar a Simulação:**
+
     ```bash
     ./gradlew run
     ```
 
-    No Windows (CMD/PowerShell):
-    ```cmd
-    gradlew.bat run
-    ```
+    (No Windows, use `gradlew.bat run`)
 
-> **Nota:** A interface gráfica de debug do JaCaMo foi otimizada (abas desativadas) para garantir performance com 50 agentes. Acompanhe a execução pelo terminal ou pelos logs gerados.
+3.  **Acompanhar:**
+    A simulação abrirá logs no terminal mostrando as negociações. O sistema roda até ser interrompido (Ctrl+C).
 
-## 📊 Configuração de Cenários
+## 📊 Configuração de Cenários (Escalabilidade)
 
-Para alterar os cenários de teste (quantidade de agentes), edite o arquivo `mas_jacamo.jcm`:
+Para atender ao requisito de testes com **50, 100 e 150 agentes**, edite o arquivo `mas_jacamo.jcm`:
 
 ```javascript
-agent veiculo : veiculo.asl {
-    instances: 50  // Altere este número para 5, 50, 100 ou 150
+mas mas_jacamo {
+    agent veiculo : veiculo.asl {
+        instances: 50  // <--- ALTERE AQUI PARA 50, 100 ou 150
+        join: mercado
+    }
     // ...
 }
-````
+```
 
-## 📈 Análise de Resultados
+### Variação de Estações
 
-A cada execução, o sistema gera um arquivo na raiz do projeto com o nome:
-`simulacao_log_[TIMESTAMP].csv`
+As estações possuem configurações diferentes hardcoded no agente `estacao.asl` para criar heterogeneidade:
 
-Este arquivo contém:
+  * **Norte:** 20 vagas (Preço Base: 1.0)
 
-  * Tempo da ação.
-  * Agente envolvido.
-  * Evento (Sucesso, Falha, Negociação).
-  * Detalhes (Valores, Motivos).
+  * **Sul:** 10 vagas (Preço Base: 0.8)
 
-Estes dados podem ser importados no Excel ou Python para gerar gráficos de desempenho e análise de concorrência.
+  * **Leste:** 15 vagas (Preço Base: 1.2 - Área Nobre)
 
-## 🛠️ Estrutura do Projeto
+  * **Oeste:** 8 vagas (Preço Base: 0.9)
 
-  * `src/agt/`: Código fonte dos agentes (Jason/ASL).
-  * `src/env/`: Código fonte dos artefatos (Java).
-  * `src/org/`: Especificação da organização (XML).
-  * `mas_jacamo.jcm`: Configuração principal e deploy.
+## 📈 Análise de Resultados (Logs)
+
+A cada execução, um arquivo de log é gerado automaticamente na pasta `log/` com o nome:
+`simulacao_YYYYMMDD_HHMMSS.csv`
+
+**Estrutura do CSV:**
+
+```csv
+Timestamp;Agente;Evento;Detalhes
+14:35:01.123;veiculo5;Bateria_Baixa;Nivel: 60
+14:35:01.450;veiculo5;Negociacao;Contra-oferta para estacao_norte
+14:35:02.000;estacao_norte;Venda;Reserva confirmada para veiculo5
+```
+
+Estes dados devem ser utilizados para gerar os gráficos de **Taxa de Sucesso**, **Preço Médio** e **Ocupação** solicitados no relatório final.
+
+## 🛠️ Estrutura de Pastas
+
+  * `src/agt/`: Código fonte dos agentes (`.asl`).
+
+  * `src/env/`: Código Java dos artefatos (`EstacaoArtifact.java`, `CSVLogger.java`).
+
+  * `src/org/`: Especificação organizacional (`org.xml`).
+
+  * `mas_jacamo.jcm`: Arquivo de configuração e deploy.
 
 -----
 

@@ -1,16 +1,32 @@
 mas mas_jacamo {
 
     agent veiculo : veiculo.asl {
-        instances: 10
+        instances: 150 
+        join: mercado 
     }
 
     agent estacao_norte : estacao.asl {
+        join: mercado
     }
 
     agent estacao_sul : estacao.asl {
+        join: mercado
+    }
+
+    agent estacao_leste : estacao.asl {
+        join: mercado
+    }
+
+    agent estacao_oeste : estacao.asl {
+        join: mercado
     }
 
     agent regulador : regulador.asl {
+        join: mercado
+    }
+
+    workspace mercado {
+        artifact logger : mas_jacamo.CSVLogger() 
     }
 
     organisation org_recarga : org.xml {
@@ -18,6 +34,8 @@ mas mas_jacamo {
             players: veiculo       consumidor,
                      estacao_norte fornecedor,
                      estacao_sul   fornecedor,
+                     estacao_leste fornecedor,
+                     estacao_oeste fornecedor,
                      regulador     fiscal
             debug
         }
